@@ -1,0 +1,25 @@
+server:
+  port: 8088
+  servlet:
+    context-path: /cqucc
+spring:
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      username: root
+      password: ty70432159
+      url: jdbc:mysql://localhost:3306/cqucc_exam3?serverTimezone=UTC
+
+mybatis-plus:
+  global-config:
+    db-config:
+      table-prefix:
+      id-type: auto
+  configuration:
+    #在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true

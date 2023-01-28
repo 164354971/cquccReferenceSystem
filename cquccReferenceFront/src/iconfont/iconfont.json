@@ -1,0 +1,135 @@
+{
+  "id": "3526805",
+  "name": "管理员端",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "1046065",
+      "name": "单列列表",
+      "font_class": "danlieliebiao",
+      "unicode": "e6e4",
+      "unicode_decimal": 59108
+    },
+    {
+      "icon_id": "29865149",
+      "name": "底层架构",
+      "font_class": "dicengjiagou",
+      "unicode": "e680",
+      "unicode_decimal": 59008
+    },
+    {
+      "icon_id": "29865167",
+      "name": "接口中心",
+      "font_class": "jiekouzhongxin",
+      "unicode": "e681",
+      "unicode_decimal": 59009
+    },
+    {
+      "icon_id": "29865171",
+      "name": "排行榜",
+      "font_class": "paihangbang",
+      "unicode": "e682",
+      "unicode_decimal": 59010
+    },
+    {
+      "icon_id": "29865173",
+      "name": "列表",
+      "font_class": "liebiao",
+      "unicode": "e683",
+      "unicode_decimal": 59011
+    },
+    {
+      "icon_id": "29865192",
+      "name": "首页",
+      "font_class": "shouye",
+      "unicode": "e684",
+      "unicode_decimal": 59012
+    },
+    {
+      "icon_id": "29865194",
+      "name": "数据",
+      "font_class": "shuju",
+      "unicode": "e685",
+      "unicode_decimal": 59013
+    },
+    {
+      "icon_id": "29865195",
+      "name": "搜索",
+      "font_class": "sousuo",
+      "unicode": "e686",
+      "unicode_decimal": 59014
+    },
+    {
+      "icon_id": "29865196",
+      "name": "时间",
+      "font_class": "shijian",
+      "unicode": "e687",
+      "unicode_decimal": 59015
+    },
+    {
+      "icon_id": "29865199",
+      "name": "设置",
+      "font_class": "shezhi",
+      "unicode": "e688",
+      "unicode_decimal": 59016
+    },
+    {
+      "icon_id": "29865205",
+      "name": "用户",
+      "font_class": "yonghu",
+      "unicode": "e689",
+      "unicode_decimal": 59017
+    },
+    {
+      "icon_id": "29865209",
+      "name": "消息",
+      "font_class": "xiaoxi",
+      "unicode": "e68a",
+      "unicode_decimal": 59018
+    },
+    {
+      "icon_id": "29865211",
+      "name": "消息中心",
+      "font_class": "xiaoxizhongxin",
+      "unicode": "e68b",
+      "unicode_decimal": 59019
+    },
+    {
+      "icon_id": "29865215",
+      "name": "应用管理",
+      "font_class": "yingyongguanli",
+      "unicode": "e68c",
+      "unicode_decimal": 59020
+    },
+    {
+      "icon_id": "29865217",
+      "name": "数据库",
+      "font_class": "shujuku",
+      "unicode": "e68d",
+      "unicode_decimal": 59021
+    },
+    {
+      "icon_id": "29865219",
+      "name": "右箭头",
+      "font_class": "youjiantou",
+      "unicode": "e68e",
+      "unicode_decimal": 59022
+    },
+    {
+      "icon_id": "29865221",
+      "name": "左箭头",
+      "font_class": "zuojiantou",
+      "unicode": "e68f",
+      "unicode_decimal": 59023
+    },
+    {
+      "icon_id": "11372640",
+      "name": "编辑",
+      "font_class": "bianji",
+      "unicode": "e8ac",
+      "unicode_decimal": 59564
+    }
+  ]
+}
