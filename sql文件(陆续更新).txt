@@ -1,0 +1,165 @@
+create database cqucc_exam3;
+use cqucc_exam3;
+
+create table admin
+(
+    id       int auto_increment comment '主键id'
+        primary key,
+    name     varchar(20)                  not null comment '管理员姓名',
+    username varchar(32)                  not null comment '工号',
+    password varchar(32) default '123456' not null comment '登录密码',
+		constraint username
+        unique (username)
+);
+
+create table teacher
+(
+    id         int auto_increment comment '主键id'
+        primary key,
+    name       varchar(20)                  not null comment '教师姓名',
+    username   varchar(15)                  not null comment '工号',
+    password   varchar(32) default '123456' not null comment '登录密码',
+    college    varchar(20)                  not null comment '学院名称',
+    close_time date                         null 		 comment '本学期结课时间',
+    tel        char(11)                  		not null comment '联系电话',
+    type       varchar(10)                  not null comment '教师类型',
+    exam_count int         default 0        not null comment '学期监考次数',
+		constraint username
+        unique (username)
+);
+
+create table student
+(
+    id         int auto_increment comment '主键id'
+        primary key,
+    name       varchar(20)                  not null comment '学生姓名',
+    grade      int                          not null comment '年级',
+    college    varchar(20)                  not null comment '学院名称',
+    profession varchar(20)                  not null comment '专业名称',
+    banji      int                          not null comment '班级',
+    username   varchar(15)                  not null comment '学号',
+    password   varchar(32) default '123456' not null comment '登录密码',
+    constraint username
+        unique (username)
+);
+
+create table major_teacher
+(
+    course     varchar(20) not null comment '课程',
+    teacher_id varchar(20) not null comment '教师id',
+    name       varchar(20) not null comment '教师姓名'
+);
+
+create table class_sum
+(
+    id         int auto_increment comment '主键'
+        primary key,
+    grade      int         not null comment '年级',
+    college    varchar(20) not null comment '学院名称',
+    profession varchar(20) not null comment '专业名称',
+    banji      int         not null comment '班级',
+    sum        int         not null comment '人数'
+);
+
+create table exam
+(
+    id           int auto_increment comment '主键'
+        primary key,
+		online 			 tinyint(1)  not null comment '0线下1线上',
+		loc          varchar(20) null 		comment '位置',
+    room_id int         		 null 		comment '考场号',
+		term         varchar(20) not null comment '学期',
+		week				 tinyint		 not null comment '周次',
+    start_time   datetime    not null comment '开始时间',
+    end_time     datetime    not null comment '结束时间',
+		time         int         not null comment '考试时长',
+    grade        int         not null comment '年级',
+    college      varchar(20) not null comment '学院名称',
+    profession   varchar(20) not null comment '专业名称',
+    course       varchar(20) not null comment '课程名称'
+);
+
+create table exam_student
+(
+    id          int auto_increment comment '主键'
+        primary key,
+    exam_id			int									 not null comment 'exam的id',
+    seat        int                  not null comment '座位号',
+    username    varchar(15)          not null comment '学号',
+    name        varchar(20)          not null comment '学生姓名',
+    banji       int                  not null comment '班级',
+    course		  varchar(32)          not null comment '课程名',
+    sign        tinyint(1) default 0  				comment '签到状态0否1是',
+    cheat       tinyint(1) default 0  				comment '是否违纪0否1是',
+    cheat_info  varchar(100)         null comment '违纪原因'
+);
+
+create table room
+(
+    id      int         not null comment '考场号',
+    loc     varchar(10) not null comment '所在楼宇',
+		num1    varchar(10) not null comment '座位数',
+    num2    varchar(10) not null comment '建议座位数',
+    longth1 int         not null comment '第一部分长',
+    longth2 int         not null,
+    longth3 int         not null,
+    width1  int         not null comment '第一部分宽',
+    width2  int         not null,
+    width3  int         not null,
+    primary key (id, loc)
+);
+
+create table exam_class
+(
+    id            int auto_increment comment '主键'
+        primary key,
+    exam_id       int         not null comment '考试任务表的主键id',
+    banji         int         null comment '考试班级',
+    teacher       varchar(20) null comment '监考教师',
+    major_teacher varchar(20) null comment '主考教师'
+);
+
+create table term
+(
+    id         int auto_increment comment '学期主键'
+        primary key,
+    term       varchar(20) not null comment '学期',
+    start_time date        not null comment '起始日期',
+    end_time   date        not null comment '起始日期',
+    count      int         not null comment '此学期周数'
+);
+
+create table college
+(
+		id         int auto_increment comment '主键'
+				primary key,
+		college 			 varchar(32)	not null comment '学院名称',
+		found_time date not null comment '成立时间'
+);
+
+create table grade
+(
+		college_id         int 	not null comment '学院的主键',
+		grade							 int  not null comment '学院的年级',
+		found_time 				 date not null comment '成立时间'
+);
+
+create table profession
+(
+		college_id         int 	not null comment '学院的主键',
+		grade							 int  not null comment '学院的年级',
+		profession				 varchar(32) not null comment '该学院年级开设的专业',
+		year 							 int	not null comment '几年制',
+		found_time 				 date not null comment '成立时间'
+);
+
+-- 每个年级，专业对应的需要考试的课程
+create table course
+(
+    id        				 int auto_increment comment '主键'
+				primary key,
+    grade    					 int         not null comment '年级',
+    college   				 varchar(20) not null comment '学院名称',
+    profession   			 varchar(20) not null comment '专业名称',
+    course    				 varchar(20) not null comment '课程名称'
+);
