@@ -1,17 +1,19 @@
 create database cqucc_exam3;
 use cqucc_exam3;
 
+-- drop table if exists admin;
 create table admin
 (
     id       int auto_increment comment '主键id'
         primary key,
     name     varchar(20)                  not null comment '管理员姓名',
-    username varchar(32)                  not null comment '工号',
+    username varchar(15)                  not null comment '工号',
     password varchar(32) default '123456' not null comment '登录密码',
 		constraint username
         unique (username)
 );
 
+-- drop table if exists teacher;
 create table teacher
 (
     id         int auto_increment comment '主键id'
@@ -28,6 +30,7 @@ create table teacher
         unique (username)
 );
 
+-- drop table if exists student;
 create table student
 (
     id         int auto_increment comment '主键id'
@@ -61,13 +64,15 @@ create table class_sum
     sum        int         not null comment '人数'
 );
 
+-- 考试任务列表
+-- drop table if exists exam;
 create table exam
 (
     id           int auto_increment comment '主键'
         primary key,
 		online 			 tinyint(1)  not null comment '0线下1线上',
 		loc          varchar(20) null 		comment '位置',
-    room_id int         		 null 		comment '考场号',
+    room    		 int         null 		comment '考场号',
 		term         varchar(20) not null comment '学期',
 		week				 tinyint		 not null comment '周次',
     start_time   datetime    not null comment '开始时间',
@@ -79,6 +84,7 @@ create table exam
     course       varchar(20) not null comment '课程名称'
 );
 
+-- 考试任务：学生
 create table exam_student
 (
     id          int auto_increment comment '主键'
@@ -94,10 +100,12 @@ create table exam_student
     cheat_info  varchar(100)         null comment '违纪原因'
 );
 
+-- 各个教室的位置
+-- drop table if exists room;
 create table room
 (
-    id      int         not null comment '考场号',
-    loc     varchar(10) not null comment '所在楼宇',
+		loc     varchar(10) not null comment '所在楼宇',
+    room    int         not null comment '教室号',
 		num1    varchar(10) not null comment '座位数',
     num2    varchar(10) not null comment '建议座位数',
     longth1 int         not null comment '第一部分长',
@@ -106,10 +114,12 @@ create table room
     width1  int         not null comment '第一部分宽',
     width2  int         not null,
     width3  int         not null,
-    primary key (id, loc)
+    primary key (loc, room)
 );
 
-create table exam_class
+-- 考试任务：教师、班级
+-- drop table if exists exam_teacher;
+create table exam_teacher
 (
     id            int auto_increment comment '主键'
         primary key,
@@ -133,8 +143,8 @@ create table college
 (
 		id         int auto_increment comment '主键'
 				primary key,
-		college 			 varchar(32)	not null comment '学院名称',
-		found_time date not null comment '成立时间'
+		college 			 		 varchar(32)	not null comment '学院名称',
+		found_time 				 date 	 			not null comment '成立时间'
 );
 
 create table grade
@@ -162,4 +172,16 @@ create table course
     college   				 varchar(20) not null comment '学院名称',
     profession   			 varchar(20) not null comment '专业名称',
     course    				 varchar(20) not null comment '课程名称'
+);
+
+-- 有课的表
+create table attend_class
+(
+		id        				 int auto_increment comment '主键'
+				primary key,
+		loc          varchar(20) null 		comment '位置',
+    room_id int         		 null 		comment '教师号',
+		start_time   datetime    not null comment '开始时间',
+    end_time     datetime    not null comment '结束时间',
+		course_id		 int 				 not null comment 'course的id'
 );
