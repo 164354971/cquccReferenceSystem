@@ -170,147 +170,484 @@
                             <el-button>清空内容</el-button>
                         </div>
                         <div style="margin-left: 12px;">
-                            <el-button type="primary">搜索信息</el-button>
+                            <el-button type="primary" @click="selectClassList">搜索信息</el-button>
                         </div>
                     </div>
 
 
                 </div>
                 <div class="table">
-                    <el-table
-                            :data="queryData"
-                            height="500"
-                            border
-                            stripe
-                            style="width: 100%;"
-                    >
-                        <el-table-column
-                                align="center"
-                                prop="loc"
-                                label="教学楼"
-                                width="150"
+<!--                    element-loading-spinner="el-icon-loading"
+                    element-loading-background="rgba(0, 0, 0, 0.8)"-->
+                    <div v-show="exam.online === false && exam.rebuild === true">
+                        <el-table
+                                v-loading="loading"
+                                element-loading-text="拼命加载中"
+                                :data="queryData"
+                                height="500"
+                                border
+                                stripe
+                                style="width: 100%;"
                         >
-                        </el-table-column>
-                        <el-table-column
-                                align="center"
-                                prop="id"
-                                sortable
-                                label="考场号"
-                                width="150"
-                        >
-                        </el-table-column>
-                        <el-table-column
-                                align="center"
-                                prop="num1"
-                                sortable
-                                label="考场座位数量"
-                                width="150"
-                        >
-                        </el-table-column>
-                        <el-table-column
-                                align="center"
-                                prop="num2"
-                                sortable
-                                label="建议座位数量"
-                                width="150"
-                        >
-                        </el-table-column>
-                        <el-table-column
-                                align="center"
-                                prop="personNum"
-                                sortable
-                                label="已选班级人数"
-                                width="150"
-                        >
-                        </el-table-column>
-                        <el-table-column
-                                align="center"
-                                label="考试班级">
-                            <template slot-scope="scope">
-                                <el-select v-model.trim="queryData[ scope.$index ].banjis"
-                                           multiple placeholder="请选择"
-                                           @change="$forceUpdate()"
-                                           :id="'val' + scope.$index"
-                                           :key="timer">
-                                    <el-option
-                                            v-for="banji in banjis"
-                                            :key="banji.id"
-                                            :label="banji.banji + '班'"
-                                            :value="banji.banji"
-                                            :disabled="banji.disabled"
-                                    >
-                                        <span style="float: left">{{ banji.banji }}班</span>
-                                        <span style="float: right; color: #8492a6; font-size: 13px">{{ banji.sum }}人</span>
-                                    </el-option>
-                                </el-select>
-                            </template>
-                        </el-table-column>
-                        <el-table-column
-                                align="center"
-                                prop="rebuilds"
-                                label="考试重修学生">
-                            <template slot-scope="scope">
-                                <el-select v-model.trim="queryData[ scope.$index ].banjis"
-                                           multiple placeholder="请选择"
-                                           @change="$forceUpdate()"
-                                           :id="'val' + scope.$index"
-                                           :key="timer">
-                                    <el-option
-                                            v-for="banji in banjis"
-                                            :key="banji.id"
-                                            :label="banji.banji + '班'"
-                                            :value="banji.banji"
-                                            :disabled="banji.disabled">
-                                    </el-option>
-                                </el-select>
-                            </template>
-                        </el-table-column>
-                        <el-table-column
-                                align="center"
-                                prop="teachers"
-                                label="监考老师">
-                            <template slot-scope="scope">
-                                <el-select v-model.trim="queryData[ scope.$index ].banjis"
-                                           multiple placeholder="请选择"
-                                           @change="$forceUpdate()"
-                                           :id="'val' + scope.$index"
-                                           :key="timer">
-                                    <el-option
-                                            v-for="banji in banjis"
-                                            :key="banji.id"
-                                            :label="banji.banji + '班'"
-                                            :value="banji.banji"
-                                            :disabled="banji.disabled">
-                                    </el-option>
-                                </el-select>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                    <div class="table-footer">
-                        <div>
-                            <div style="float: left;margin-left: 0;">
-                                当前可用考场个数：<span>{{queryData.length}}</span>
+                            <el-table-column
+                                    align="center"
+                                    prop="loc"
+                                    label="教学楼"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="room"
+                                    sortable
+                                    label="考场号"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="num1"
+                                    sortable
+                                    label="考场座位数量"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="num2"
+                                    sortable
+                                    label="建议座位数量"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="personNum"
+                                    sortable
+                                    label="已选参考人数"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    label="考试班级">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].classSumList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="classSum in classSumList"
+                                                :key="classSum.id"
+                                                :label="classSum.banji + '班'"
+                                                :value="classSum.banji"
+                                                :disabled="classSum.disabled"
+                                        >
+                                            <span style="float: left">{{ classSum.banji }}班</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ classSum.sum }}人</span>
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="rebuilds"
+                                    label="考试重修学生">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].rebuildList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="rebuild in rebuildList"
+                                                :key="rebuild.id"
+                                                :label="rebuild.name"
+                                                :value="rebuild.username"
+                                                :disabled="rebuild.disabled">
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="teachers"
+                                    label="监考老师">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].teacherList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="teacher in teacherList"
+                                                :key="teacher.id"
+                                                :label="teacher.name"
+                                                :value="teacher.username"
+                                                :disabled="teacher.disabled"
+                                        >
+                                            <span style="float: left">{{ teacher.name }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ teacher.username }}</span>
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <div class="table-footer">
+                            <div>
+                                <div style="float: left;margin-left: 0;">
+                                    当前可用考场个数：<span>{{queryData.length}}</span>
+                                </div>
+
                             </div>
 
-                        </div>
-
-                        <div>
-                            <div style="width: 300px;">
-                                <span>考试负责人：</span>
+                            <div>
+                                <div style="width: 300px;">
+                                    <span>考试负责人：</span>
+                                    <div>
+                                        <el-input
+                                                style="width: 140px;"
+                                                v-model="majorTeacher.name"
+                                                :disabled="true"
+                                        >
+                                        </el-input>
+                                    </div>
+                                </div>
                                 <div>
-                                    <el-input
-                                            style="width: 140px;"
-                                            v-model="exam.college"
-                                            :disabled="true"
-                                    >
-                                    </el-input>
+                                    <el-button>*智能排考</el-button>
+                                </div>
+                                <div style="margin-left: 12px;">
+                                    <el-button type="primary">提交考试</el-button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <div v-show="exam.online === false && exam.rebuild === false">
+                        <el-table
+                                v-loading="loading"
+                                element-loading-text="拼命加载中"
+                                :data="queryData"
+                                height="500"
+                                border
+                                stripe
+                                style="width: 100%;"
+                        >
+                            <el-table-column
+                                    align="center"
+                                    prop="loc"
+                                    label="教学楼"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="room"
+                                    sortable
+                                    label="考场号"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="num1"
+                                    sortable
+                                    label="考场座位数量"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="num2"
+                                    sortable
+                                    label="建议座位数量"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="personNum"
+                                    sortable
+                                    label="已选参考人数"
+                                    width="150"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    label="考试班级">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].classSumList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="classSum in classSumList"
+                                                :key="classSum.id"
+                                                :label="classSum.banji + '班'"
+                                                :value="classSum.banji"
+                                                :disabled="classSum.disabled"
+                                        >
+                                            <span style="float: left">{{ classSum.banji }}班</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ classSum.sum }}人</span>
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="teachers"
+                                    label="监考老师">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].teacherList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="teacher in teacherList"
+                                                :key="teacher.id"
+                                                :label="teacher.name"
+                                                :value="teacher.username"
+                                                :disabled="teacher.disabled"
+                                        >
+                                            <span style="float: left">{{ teacher.name }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ teacher.username }}</span>
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <div class="table-footer">
                             <div>
-                                <el-button>*智能排考</el-button>
+                                <div style="float: left;margin-left: 0;">
+                                    当前可用考场个数：<span>{{queryData.length}}</span>
+                                </div>
+
                             </div>
-                            <div style="margin-left: 12px;">
-                                <el-button type="primary">提交考试</el-button>
+
+                            <div>
+                                <div style="width: 300px;">
+                                    <span>考试负责人：</span>
+                                    <div>
+                                        <el-input
+                                                style="width: 140px;"
+                                                v-model="majorTeacher.name"
+                                                :disabled="true"
+                                        >
+                                        </el-input>
+                                    </div>
+                                </div>
+                                <div>
+                                    <el-button>*智能排考</el-button>
+                                </div>
+                                <div style="margin-left: 12px;">
+                                    <el-button type="primary">提交考试</el-button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-show="exam.online === true && exam.rebuild === true">
+                        <el-table
+                                v-loading="loading"
+                                element-loading-text="拼命加载中"
+                                :data="queryData"
+                                height="500"
+                                border
+                                stripe
+                                style="width: 100%;"
+                        >
+                            <el-table-column
+                                    align="center"
+                                    prop="personNum"
+                                    sortable
+                                    label="已选参考人数"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    label="考试班级">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].classSumList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="classSum in classSumList"
+                                                :key="classSum.id"
+                                                :label="classSum.banji + '班'"
+                                                :value="classSum.banji"
+                                                :disabled="classSum.disabled"
+                                        >
+                                            <span style="float: left">{{ classSum.banji }}班</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ classSum.sum }}人</span>
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="rebuilds"
+                                    label="考试重修学生">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].rebuildList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="rebuild in rebuildList"
+                                                :key="rebuild.id"
+                                                :label="rebuild.name"
+                                                :value="rebuild.username"
+                                                :disabled="rebuild.disabled">
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="teachers"
+                                    label="监考老师">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].teacherList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="teacher in teacherList"
+                                                :key="teacher.id"
+                                                :label="teacher.name"
+                                                :value="teacher.username"
+                                                :disabled="teacher.disabled"
+                                        >
+                                            <span style="float: left">{{ teacher.name }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ teacher.username }}</span>
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <div class="table-footer">
+                            <div>
+                                <div style="float: left;margin-left: 0;">
+<!--                                    当前可用考场个数：<span>{{queryData.length}}</span>-->
+                                </div>
+
+                            </div>
+
+                            <div>
+                                <div style="width: 300px;">
+                                    <span>考试负责人：</span>
+                                    <div>
+                                        <el-input
+                                                style="width: 140px;"
+                                                v-model="majorTeacher.name"
+                                                :disabled="true"
+                                        >
+                                        </el-input>
+                                    </div>
+                                </div>
+                                <div>
+                                    <el-button>*智能排考</el-button>
+                                </div>
+                                <div style="margin-left: 12px;">
+                                    <el-button type="primary">提交考试</el-button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-show="exam.online === true && exam.rebuild === false">
+                        <el-table
+                                v-loading="loading"
+                                element-loading-text="拼命加载中"
+                                :data="queryData"
+                                height="500"
+                                border
+                                stripe
+                                style="width: 100%;"
+                        >
+                            <el-table-column
+                                    align="center"
+                                    prop="personNum"
+                                    sortable
+                                    label="已选参考人数"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    label="考试班级">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].classSumList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="classSum in classSumList"
+                                                :key="classSum.id"
+                                                :label="classSum.banji + '班'"
+                                                :value="classSum.banji"
+                                                :disabled="classSum.disabled"
+                                        >
+                                            <span style="float: left">{{ classSum.banji }}班</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ classSum.sum }}人</span>
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                    align="center"
+                                    prop="teachers"
+                                    label="监考老师">
+                                <template slot-scope="scope">
+                                    <el-select v-model.trim="queryData[ scope.$index ].teacherList"
+                                               multiple placeholder="请选择"
+                                               @change="$forceUpdate()"
+                                               :id="'val' + scope.$index"
+                                               :key="timer">
+                                        <el-option
+                                                v-for="teacher in teacherList"
+                                                :key="teacher.id"
+                                                :label="teacher.name"
+                                                :value="teacher.username"
+                                                :disabled="teacher.disabled"
+                                        >
+                                            <span style="float: left">{{ teacher.name }}</span>
+                                            <span style="float: right; color: #8492a6; font-size: 13px">{{ teacher.username }}</span>
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <div class="table-footer">
+                            <div>
+                                <div style="float: left;margin-left: 0;">
+                                    <!--                                    当前可用考场个数：<span>{{queryData.length}}</span>-->
+                                </div>
+
+                            </div>
+
+                            <div>
+                                <div style="width: 300px;">
+                                    <span>考试负责人：</span>
+                                    <div>
+                                        <el-input
+                                                style="width: 140px;"
+                                                v-model="majorTeacher.name"
+                                                :disabled="true"
+                                        >
+                                        </el-input>
+                                    </div>
+                                </div>
+                                <div>
+                                    <el-button>*智能排考</el-button>
+                                </div>
+                                <div style="margin-left: 12px;">
+                                    <el-button type="primary">提交考试</el-button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -353,41 +690,25 @@
                 professionList:[],
                 courseList:[],
                 exam:{
-                    term: {},
-                    college:{},
-                    profession:{},
-                    grade:{},
-                    course:{},
-                    week:'',
-                    time:0,
+                    term: {}, college:{}, profession:{}, grade:{}, course:{}, week:'', time:0,
                     startTime:'',//timeList[0]
                     endTime:'',//timeList[1]
-                    rebuild:false,
-                    online:false,
+                    rebuild:false, online:false
                 },
+                queryInfo:{},
                 queryData:[
-                    /*{loc: "主教学楼", id: "101", num1: 137, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},
-                    {loc: "主教学楼", id: "102", num1: 136, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},
-                    {loc: "主教学楼", id: "103", num1: 135, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},
-                    {loc: "主教学楼", id: "104", num1: 134, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},
-                    {loc: "主教学楼", id: "105", num1: 136, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},
-                    {loc: "主教学楼", id: "106", num1: 133, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},
-                    {loc: "主教学楼", id: "107", num1: 137, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},
-                    {loc: "主教学楼", id: "108", num1: 138, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},*/
+                    /*{loc: "主教学楼", room: "101", num1: 137, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},*/
                 ],
-                banjis:[
-                    {id:1, college:'', grade:'', profession:'', banji:1, sum:30, disabled: false},
-                    {id:2, college:'', grade:'', profession:'', banji:2, sum:32, disabled: false},
-                    {id:3, college:'', grade:'', profession:'', banji:3, sum:33, disabled: false},
-                    {id:4, college:'', grade:'', profession:'', banji:4, sum:31, disabled: false}
-                ],
-                rebuilds:[
-
-                ],
-                teachers:[
-
-                ],
-                timer:''
+                roomList:[],
+                classSumList:[],
+                rebuildList:[],
+                teacherList:[],
+                majorTeacher:{
+                    teacherId:'',
+                    name:''
+                },
+                timer:'',
+                loading: false
             }
         },
         created(){
@@ -401,9 +722,13 @@
         methods:{
             /*初始化*/
             init(){
+                this.setUser();
                 this.setTermList();
             },
             /**/
+            setUser(){
+                this.user = JSON.parse(localStorage.getItem('user'));
+            },
             setTermList(){
                 this.axios.get("/exam/termList/")
                     .then((res) => {
@@ -515,6 +840,102 @@
 
                 console.log("this.exam.week", this.exam.week);
                 console.log("this.exam.time", this.exam.time);
+            },
+            selectClassList(){
+                console.log('this.exam', this.exam);
+                let examKV = {};
+                examKV["term"] = "学期";
+                examKV["college"] = "学院";
+                examKV["profession"] = "专业";
+                examKV["grade"] = "年级";
+                examKV["course"] = "课程";
+                examKV["week"] = "周次";
+                examKV["time"] = "时长";
+                examKV["startTime"] = "开始时间";
+                examKV["endTime"] = "结束时间";
+                examKV["rebuild"] = "重修生";
+                examKV["online"] = "考试方式";
+                let flag = true;
+                for (let key in this.exam) {
+                    if (this.exam.hasOwnProperty(key)) {
+                        if(JSON.stringify(this.exam[key]) !== "{}" && this.exam[key] !== 0 && this.exam[key] !== '') {
+                            console.log(key, this.exam[key]);
+                        }else{
+                            flag = false;
+                            if(examKV[key] === "时长"){
+                                setTimeout(() => {
+                                    this.$message.error(examKV[key] + "不可为0！请重试");
+                                }, 10);
+                            }else{
+                                setTimeout(() => {
+                                    this.$message.error(examKV[key] + "选项输入有误！请重试");
+                                }, 10);
+                            }
+
+                        }
+                    }
+                }
+                if(!flag) return;
+                this.loading = true;
+                let queryInfo = {
+                    term: this.exam.term.term,
+                    college:this.exam.college.college,
+                    profession:this.exam.profession.profession,
+                    grade:this.exam.grade.grade,
+                    course:this.exam.course.course,
+                    week:this.exam.week,
+                    time:this.exam.time,
+                    startTime:this.exam.startTime,
+                    endTime:this.exam.endTime,
+                    rebuild:this.exam.rebuild,
+                    online:this.exam.online,
+                };
+                this.queryInfo = queryInfo;
+                console.log('queryInfo', queryInfo);
+                this.queryData = [];
+                this.roomList = [];
+                this.classSumList = [];
+                this.rebuildList = [];
+                this.teacherList = [];
+                this.majorTeacher = {};
+                this.axios.post("/exam/queryInfo", this.queryInfo)
+                    .then((res) => {
+                        console.log(res.data);
+                        if(res.data.flag && res.data.data != ""){
+                            this.$message.success(res.data.msg);
+                            if(this.queryInfo.online){//如果是线上
+                                this.classSumList = res.data.data.classSumList;
+                                this.rebuildList = res.data.data.rebuildList;
+                                this.teacherList = res.data.data.teacherList;
+                                this.majorTeacher = res.data.data.majorTeacher;
+                                for (let i = 1; i <= 10; i++) {
+                                    let obj = {
+                                        personNum: 0,
+                                        classSumList: [], rebuildList: [], teacherList: []
+                                    }
+                                    this.queryData.push(obj);
+                                }
+                            }
+                            else{
+                                this.roomList = res.data.data.roomList;
+                                this.classSumList = res.data.data.classSumList;
+                                this.rebuildList = res.data.data.rebuildList;
+                                this.teacherList = res.data.data.teacherList;
+                                this.majorTeacher = res.data.data.majorTeacher;
+                                for (const room of this.roomList) {
+                                    let obj = {
+                                        loc: room.loc, room: room.room, num1: room.num1, num2:room.num2, personNum: 0,
+                                        classSumList: [], rebuildList: [], teacherList: []
+                                    }
+                                    this.queryData.push(obj);
+                                }
+                            }
+                        }
+                        else this.$message.error(res.data.msg);
+                        this.loading = false;
+                    }).finally(() => {
+                    this.loading = false;
+                });
             },
             clickBar(){
                 let handler=document.querySelector('.handler');

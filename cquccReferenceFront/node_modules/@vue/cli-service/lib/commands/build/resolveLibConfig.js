@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-module.exports = (api, { entry, name, formats, filename }, options) => {
+module.exports = (api, { entry, name, formats, filename, 'inline-vue': inlineVue }, options) => {
   const { log, error } = require('@vue/cli-shared-utils')
   const abort = msg => {
     log()
@@ -53,17 +53,6 @@ module.exports = (api, { entry, name, formats, filename }, options) => {
       config.optimization.minimize(false)
     }
 
-    // externalize Vue in case user imports it
-    config
-      .externals({
-        ...config.get('externals'),
-        vue: {
-          commonjs: 'vue',
-          commonjs2: 'vue',
-          root: 'Vue'
-        }
-      })
-
     // inject demo page for umd
     if (genHTML) {
       const template = isVueEntry ? 'demo-lib.html' : 'demo-lib-js.html'
@@ -100,6 +89,20 @@ module.exports = (api, { entry, name, formats, filename }, options) => {
         realEntry = require.resolve('./entry-lib-no-default.js')
       }
     }
+
+    // externalize Vue in case user imports it
+    rawConfig.externals = [
+      ...(Array.isArray(rawConfig.externals) ? rawConfig.externals : [rawConfig.externals]),
+      {
+        ...(inlineVue || {
+          vue: {
+            commonjs: 'vue',
+            commonjs2: 'vue',
+            root: 'Vue'
+          }
+        })
+      }
+    ].filter(Boolean)
 
     rawConfig.entry = {
       [entryName]: realEntry

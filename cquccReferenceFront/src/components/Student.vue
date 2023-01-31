@@ -548,7 +548,7 @@
             clearInterval(this.timer);
             this.timer = null;
             this.setTimer();
-            this.getUser();
+            this.setUser();
             this.init()
         },
         mounted() {
@@ -774,7 +774,7 @@
                 zhu.setOption(option1);
                 this.ls = 1;
             },
-            getUser() {
+            setUser() {
                 this.user = JSON.parse(localStorage.getItem('user'));
                 console.log(this.user.img);
                 // this.user.img = Promise.resolve(require(this.user.img));
