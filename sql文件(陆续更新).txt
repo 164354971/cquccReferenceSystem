@@ -175,13 +175,52 @@ create table course
 );
 
 -- 有课的表
+drop table if exists attend_class;
 create table attend_class
 (
 		id        				 int auto_increment comment '主键'
 				primary key,
 		loc          varchar(20) null 		comment '位置',
-    room_id int         		 null 		comment '教师号',
+    room         int         		 null 		comment '教师号',
 		start_time   datetime    not null comment '开始时间',
     end_time     datetime    not null comment '结束时间',
 		course_id		 int 				 not null comment 'course的id'
+);
+-- alter table exam add rebuild tinyint(1) comment '0无重修生1有重修生';
+-- alter table exam modify rebuild tinyint(1) not null comment '0无重修生1有重修生';
+-- alter table room modify num2 int not null comment '建议座位数';
+create table rebuild
+(
+    id         int auto_increment comment '主键'
+        primary key,
+    grade      int         not null comment '原年级',
+    college    varchar(20) not null comment '原学院名称',
+    profession varchar(20) not null comment '原专业名称',
+    banji      int         not null comment '原班级',
+    username   varchar(15) not null comment '学号',
+    name       varchar(20) not null comment '姓名',
+    course     varchar(20) not null comment '课程名称',
+    deal       tinyint(1)  null comment '0未参考1参考'
+);
+
+create table history_exam
+(
+    id         int auto_increment comment '主键'
+        primary key,
+    online     tinyint(1)  not null comment '0线下1线上',
+    loc        varchar(20) null comment '位置',
+    room       int         null comment '考场号',
+    term       varchar(20) not null comment '学期',
+    week       tinyint     not null comment '周次',
+    start_time datetime    not null comment '开始时间',
+    end_time   datetime    not null comment '结束时间',
+    time       int         not null comment '考试时长',
+    grade      int         not null comment '年级',
+    college    varchar(20) not null comment '学院名称',
+    profession varchar(20) not null comment '专业名称',
+    course     varchar(20) not null comment '课程名称',
+    rebuild    tinyint(1)  not null comment '0无重修生1有重修生',
+		person_sum int 				 not null comment '应到总人数',
+		person_num int 				 not null comment '实到总人数',
+		cheat_num  int 				 not null comment '违纪总人数'
 );
