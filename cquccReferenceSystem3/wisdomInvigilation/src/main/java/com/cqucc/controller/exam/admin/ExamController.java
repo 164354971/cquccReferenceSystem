@@ -165,86 +165,14 @@ public class ExamController {
         SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date queryStartTime = sdf1.parse(queryInfo.getStartTime());
         Date queryEndTime = sdf1.parse(queryInfo.getEndTime());
-        if(queryInfo.getOnline()){//线上考试
-            List<Exam> examList = examService.list();
-            //4.接下来获取考试的学生班级（注意此时间段内学生有无其他考试）
 
-            //4.1 查exam表中是否安排了本学期该专业年级这项考试
-            QueryWrapper<Exam> eqw = new QueryWrapper<>();
-            eqw.eq("term", queryInfo.getTerm()).eq("college", queryInfo.getCollege());
-            eqw.eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
-            eqw.eq("course", queryInfo.getCourse());
-            List<Exam> examList1 = examService.list(eqw);
-            if(examList1.size() > 0) return new R(true, "", "当前设置的学期所安排的考试课程 " + queryInfo.getCourse() + " 已存在！");
+        //3.需要查询可用教室
+        List<Exam> examList = examService.list();
+        List<AttendClass> attendClasses = attendClassService.list();
+        List<Room> roomList = roomService.list();
 
-            //4.2 查history_exam表中是否安排过本学期该专业年级这项考试
-            QueryWrapper<HistoryExam> heqw = new QueryWrapper<>();
-            heqw.eq("term", queryInfo.getTerm()).eq("college", queryInfo.getCollege());
-            heqw.eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
-            heqw.eq("course", queryInfo.getCourse());
-            List<HistoryExam> historyExamList1 = historyExamService.list(heqw);
-            if(historyExamList1.size() > 0) return new R(true, "", "当前设置的学期所安排的考试课程 " + queryInfo.getCourse() + " 已存在！该考试课程已结束");
-
-            //4.3 查排考时段是否与待考学生时间冲突
-            for (Exam e : examList){
-                Date startTime = sdf1.parse(e.getStartTime());
-                Date endTime = sdf1.parse(e.getEndTime());
-                //如果当前时段发生重叠，且正好是待考的学院年级专业
-                if(!(queryStartTime.after(endTime) || queryEndTime.before(startTime))
-                        && Objects.equals(queryInfo.getTerm(), e.getTerm())
-                        && Objects.equals(queryInfo.getCollege(), e.getCollege())
-                        && Objects.equals(queryInfo.getProfession(), e.getProfession())
-                        && Objects.equals(queryInfo.getGrade(), e.getGrade())) {
-                    return new R(true, "",  e.getCollege() + e.getGrade() + "级" + e.getProfession() + "专业学生的考试课程: " + e.getCourse() +  " 的考试时间冲突，请调整考试时间段至另一时段");
-                }
-            }
-
-            //4.4 都符合条件了就把该学院年级专业的各个班级都调出来
-            QueryWrapper<ClassSum> cqw = new QueryWrapper<>();
-            cqw.eq("college", queryInfo.getCollege()).eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
-            List<ClassSum> classSumList = classSumService.list(cqw);
-
-            //5.重修生（deal为false表示未排考）
-            List<Rebuild> rebuildList = new ArrayList<>();
-            if(queryInfo.getRebuild()){
-                QueryWrapper<Rebuild> rqw = new QueryWrapper<>();
-                rqw.eq("college", queryInfo.getCollege()).eq("profession", queryInfo.getProfession()).eq("deal", 0);
-                rebuildList = rebuildService.list(rqw);
-            }
-
-            //6.监考老师
-            //6.1 要求结课时间早于排考时间
-            QueryWrapper<Teacher> tqw = new QueryWrapper<>();
-            tqw.lt("close_time", queryInfo.getStartTime());
-
-            //6.2 查询exam_teacher表，看看各个老师该时段是否有监考任务，有就排除那个监考老师
-            List<ExamTeacher> examTeacherList = examTeacherService.list();
-            for(ExamTeacher et : examTeacherList){
-                //查询到监考老师对应的考试信息
-                Exam e = examService.getById(et.getExamId());
-                Date startTime = sdf1.parse(e.getStartTime());
-                Date endTime = sdf1.parse(e.getEndTime());
-                if(!(queryStartTime.after(endTime) || queryEndTime.before(startTime))) {
-                    examTeacherList.remove(et);
-                }
-            }
-            //6.3 最后对监考教师的本学期监考次数排序，次数少的优先排
-            tqw.orderByAsc("exam_count");
-            List<Teacher> teacherList = teacherService.list(tqw);
-            if(teacherList.size() == 0) return new R(true, "", "当前时间段 " + queryInfo.getStartTime() + " 至 " + queryInfo.getEndTime() + " " + queryInfo.getCollege() + " 无空闲监考教师！请重新设置新的时间段");
-
-            //7.主考教师
-            QueryWrapper<MajorTeacher> mqw = new QueryWrapper<>();
-            mqw.eq("course", queryInfo.getCourse());
-            MajorTeacher majorTeacher = majorTeacherService.getOne(mqw);
-
-            return new R(true, new QueryData(null, classSumList, rebuildList, teacherList, majorTeacher), "数据已更新");
-        }
-        else{//不是线上，需要查询可用教室
-            List<Exam> examList = examService.list();
-            List<AttendClass> attendClasses = attendClassService.list();
-            List<Room> roomList = roomService.list();
-
+        if(!queryInfo.getOnline()){
+            //3.1 查当前时段各个教室有没有在考试的
             for (Exam e : examList){
                 Date startTime = sdf1.parse(e.getStartTime());
                 Date endTime = sdf1.parse(e.getEndTime());
@@ -259,6 +187,7 @@ public class ExamController {
                     }
                 }
             }
+            //3.2 查当前时段各个教室有没有在上课的
             for (AttendClass e : attendClasses){
                 Date startTime = sdf1.parse(e.getStartTime());
                 Date endTime = sdf1.parse(e.getEndTime());
@@ -273,90 +202,87 @@ public class ExamController {
                     }
                 }
             }
-            //3.得到可用考场列表
+            //3.3 得到可用考场列表
             if(roomList.size() == 0)
-                //没有空闲考场还考个屁
+                //线下没有空闲考场还考个屁
                 return new R(true, "", "未获取到当前设置时段 " + queryInfo.getStartTime() + " 至 " + queryInfo.getEndTime() + " 的可用考场，请检查后重试");
-
-
-            //4.接下来获取考试的学生班级（注意此时间段内学生有无其他考试）
-
-            //4.1 查exam表中是否安排了本学期该专业年级这项考试
-            QueryWrapper<Exam> eqw = new QueryWrapper<>();
-            eqw.eq("term", queryInfo.getTerm()).eq("college", queryInfo.getCollege());
-            eqw.eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
-            eqw.eq("course", queryInfo.getCourse());
-            List<Exam> examList1 = examService.list(eqw);
-            if(examList1.size() > 0) return new R(true, "", "当前设置的学期所安排的考试课程 " + queryInfo.getCourse() + " 已存在！");
-
-            //4.2 查history_exam表中是否安排过本学期该专业年级这项考试
-            QueryWrapper<HistoryExam> heqw = new QueryWrapper<>();
-            heqw.eq("term", queryInfo.getTerm()).eq("college", queryInfo.getCollege());
-            heqw.eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
-            heqw.eq("course", queryInfo.getCourse());
-            List<HistoryExam> historyExamList1 = historyExamService.list(heqw);
-            if(historyExamList1.size() > 0) return new R(true, "", "当前设置的学期所安排的考试课程 " + queryInfo.getCourse() + " 已存在！该考试课程已结束");
-
-            //4.3 查排考时段是否与待考学生时间冲突
-            for (Exam e : examList){
-                Date startTime = sdf1.parse(e.getStartTime());
-                Date endTime = sdf1.parse(e.getEndTime());
-                //如果当前时段发生重叠，且正好是待考的学院年级专业
-                if(!(queryStartTime.after(endTime) || queryEndTime.before(startTime))
-                        && Objects.equals(queryInfo.getTerm(), e.getTerm())
-                        && Objects.equals(queryInfo.getCollege(), e.getCollege())
-                        && Objects.equals(queryInfo.getProfession(), e.getProfession())
-                        && Objects.equals(queryInfo.getGrade(), e.getGrade())) {
-                    return new R(true, "",  e.getCollege() + e.getGrade() + "级" + e.getProfession() + "专业学生的考试课程: " + e.getCourse() +  " 的考试时间冲突，请调整考试时间段至另一时段");
-                }
-            }
-
-            //4.4 都符合条件了就把该学院年级专业的各个班级都调出来
-            QueryWrapper<ClassSum> cqw = new QueryWrapper<>();
-            cqw.eq("college", queryInfo.getCollege()).eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
-            List<ClassSum> classSumList = classSumService.list(cqw);
-
-            //5.重修生（deal为false表示未排考）
-            List<Rebuild> rebuildList = new ArrayList<>();
-            if(queryInfo.getRebuild()){
-                QueryWrapper<Rebuild> rqw = new QueryWrapper<>();
-                rqw.eq("college", queryInfo.getCollege()).eq("profession", queryInfo.getProfession()).eq("deal", 0);
-                rebuildList = rebuildService.list(rqw);
-            }
-
-            //6.监考老师
-            //6.1 要求结课时间早于排考时间
-            QueryWrapper<Teacher> tqw = new QueryWrapper<>();
-            tqw.lt("close_time", queryInfo.getStartTime());
-
-            //6.2 查询exam_teacher表，看看各个老师该时段是否有监考任务，有就排除那个监考老师
-            List<ExamTeacher> examTeacherList = examTeacherService.list();
-            for(ExamTeacher et : examTeacherList){
-                //查询到监考老师对应的考试信息
-                Exam e = examService.getById(et.getExamId());
-                Date startTime = sdf1.parse(e.getStartTime());
-                Date endTime = sdf1.parse(e.getEndTime());
-                if(!(queryStartTime.after(endTime) || queryEndTime.before(startTime))) {
-                    examTeacherList.remove(et);
-                }
-            }
-            //6.3 最后对监考教师的本学期监考次数排序，次数少的优先排
-            tqw.orderByAsc("exam_count");
-            List<Teacher> teacherList = teacherService.list(tqw);
-            if(teacherList.size() == 0) return new R(true, "", "当前时间段 " + queryInfo.getStartTime() + " 至 " + queryInfo.getEndTime() + " " + queryInfo.getCollege() + " 无空闲监考教师！请重新设置新的时间段");
-
-            //7.主考教师
-            QueryWrapper<MajorTeacher> mqw = new QueryWrapper<>();
-            mqw.eq("course", queryInfo.getCourse());
-            MajorTeacher majorTeacher = majorTeacherService.getOne(mqw);
-
-            return new R(true, new QueryData(roomList, classSumList, rebuildList, teacherList, majorTeacher), "数据已更新");
-
-           /* long time = s1.getTime();
-            long d2Time = s2.getTime();
-            System.out.println("time = " + time);
-            System.out.println("d2Time = " + d2Time);
-            System.out.println(time==d2Time);*/
         }
+
+        //4.接下来获取考试的学生班级（注意此时间段内学生有无其他考试）
+
+        //4.1 查exam表中是否安排了本学期该专业年级这项考试
+        QueryWrapper<Exam> eqw = new QueryWrapper<>();
+        eqw.eq("term", queryInfo.getTerm()).eq("college", queryInfo.getCollege());
+        eqw.eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
+        eqw.eq("course", queryInfo.getCourse());
+        List<Exam> examList1 = examService.list(eqw);
+        if(examList1.size() > 0) return new R(true, "", "当前设置的学期所安排的考试课程 " + queryInfo.getCourse() + " 已存在！");
+
+        //4.2 查history_exam表中是否安排过本学期该专业年级这项考试
+        QueryWrapper<HistoryExam> heqw = new QueryWrapper<>();
+        heqw.eq("term", queryInfo.getTerm()).eq("college", queryInfo.getCollege());
+        heqw.eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
+        heqw.eq("course", queryInfo.getCourse());
+        List<HistoryExam> historyExamList1 = historyExamService.list(heqw);
+        if(historyExamList1.size() > 0) return new R(true, "", "当前设置的学期所安排的考试课程 " + queryInfo.getCourse() + " 已存在！该考试课程已结束");
+
+        //4.3 查排考时段是否与待考学生时间冲突
+        for (Exam e : examList){
+            Date startTime = sdf1.parse(e.getStartTime());
+            Date endTime = sdf1.parse(e.getEndTime());
+            //如果当前时段发生重叠，且正好是待考的学院年级专业
+            if(!(queryStartTime.after(endTime) || queryEndTime.before(startTime))
+                    && Objects.equals(queryInfo.getTerm(), e.getTerm())
+                    && Objects.equals(queryInfo.getCollege(), e.getCollege())
+                    && Objects.equals(queryInfo.getProfession(), e.getProfession())
+                    && Objects.equals(queryInfo.getGrade(), e.getGrade())) {
+                return new R(true, "",  e.getCollege() + e.getGrade() + "级" + e.getProfession() + "专业学生的考试课程: " + e.getCourse() +  " 的考试时间冲突，请调整考试时间段至另一时段");
+            }
+        }
+
+        //4.4 都符合条件了就把该学院年级专业的各个班级都调出来
+        QueryWrapper<ClassSum> cqw = new QueryWrapper<>();
+        cqw.eq("college", queryInfo.getCollege()).eq("profession", queryInfo.getProfession()).eq("grade", queryInfo.getGrade());
+        List<ClassSum> classSumList = classSumService.list(cqw);
+
+        //5.重修生（deal为false表示未排考）
+        List<Rebuild> rebuildList = new ArrayList<>();
+        QueryWrapper<Rebuild> rqw = new QueryWrapper<>();
+        rqw.eq("college", queryInfo.getCollege()).eq("profession", queryInfo.getProfession()).eq("deal", 0);
+        rqw.lt("grade", queryInfo.getGrade());
+        rebuildList = rebuildService.list(rqw);
+
+        //6.监考老师
+        //6.1 要求结课时间早于排考时间
+        QueryWrapper<Teacher> tqw = new QueryWrapper<>();
+        tqw.lt("close_time", queryInfo.getStartTime()).or().isNull("close_time");
+        tqw.orderByAsc("exam_count");
+        List<Teacher> teacherList = teacherService.list(tqw);
+
+        //6.2 查询exam_teacher表，看看各个老师该时段是否有监考任务，有就排除那个监考老师
+        List<ExamTeacher> examTeacherList = examTeacherService.list();
+        for(ExamTeacher et : examTeacherList){
+            //查询到监考老师对应的考试信息
+            Exam e = examService.getById(et.getExamId());
+            Date startTime = sdf1.parse(e.getStartTime());
+            Date endTime = sdf1.parse(e.getEndTime());
+            if(!(queryStartTime.after(endTime) || queryEndTime.before(startTime))) {
+                for(Teacher t : teacherList){
+                    if(Objects.equals(t.getUsername(), et.getTeacher())){
+                        teacherList.remove(t);
+                        break;
+                    }
+                }
+            }
+        }
+        //6.3 最后对监考教师的本学期监考次数排序，次数少的优先排
+        if(teacherList.size() == 0) return new R(true, "", "当前时间段 " + queryInfo.getStartTime() + " 至 " + queryInfo.getEndTime() + " " + queryInfo.getCollege() + " 无空闲监考教师！请重新设置新的时间段");
+
+        //7.主考教师
+        QueryWrapper<MajorTeacher> mqw = new QueryWrapper<>();
+        mqw.eq("course", queryInfo.getCourse());
+        MajorTeacher majorTeacher = majorTeacherService.getOne(mqw);
+
+        return new R(true, new QueryData(roomList, classSumList, rebuildList, teacherList, majorTeacher), "数据已更新");
     }
 }
