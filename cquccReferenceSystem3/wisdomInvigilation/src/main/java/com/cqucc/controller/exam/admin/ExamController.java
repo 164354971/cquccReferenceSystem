@@ -158,7 +158,7 @@ public class ExamController {
     }
 
     @RequestMapping("/queryInfo")
-    public R QueryInfo(@RequestBody QueryInfo queryInfo) throws ParseException {
+    public R queryInfo(@RequestBody QueryInfo queryInfo) throws ParseException {
         //1.分析online值，看是否需要查询可用教室信息
         System.out.println(queryInfo.toString());
         //2.从 排课表 和 考试信息表 得到当前可用的教室列表
@@ -284,5 +284,19 @@ public class ExamController {
         MajorTeacher majorTeacher = majorTeacherService.getOne(mqw);
 
         return new R(true, new QueryData(roomList, classSumList, rebuildList, teacherList, majorTeacher), "数据已更新");
+    }
+
+    @RequestMapping("/intelligenceArrangeExam")
+    public R intelligenceArrangeExam(@RequestBody QueryData queryData){
+        System.out.println(queryData.toString());
+        List<Room> roomList = (List<Room>) queryData.getRoomList();
+        List<Rebuild> rebuildList = (List<Rebuild>) queryData.getRebuildList();
+        List<Teacher> teacherList = (List<Teacher>) queryData.getTeacherList();
+        MajorTeacher majorTeacher = queryData.getMajorTeacher();
+        /*System.out.println(roomList.toString());
+        System.out.println(rebuildList.toString());
+        System.out.println(teacherList.toString());
+        System.out.println(majorTeacher.toString());*/
+        return new R(true, "");
     }
 }

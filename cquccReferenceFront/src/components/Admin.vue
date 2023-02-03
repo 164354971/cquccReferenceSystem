@@ -235,13 +235,15 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
+                                    prop="classSumList"
                                     label="考试班级">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="classSumValue[ scope.$index ]"
-                                               multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
-                                               :id="'val' + scope.$index"
-                                               :key="timer">
+                                    <el-select
+                                            v-model.trim="scope.row[scope.column.property]"
+                                            multiple placeholder="请选择"
+                                            @change="changeQueryDataClassSumList(scope)"
+                                            :id="'val' + scope.$index"
+                                            :key="timer">
                                         <el-option
                                                 v-for="classSum in classSumList"
                                                 :key="classSum.id"
@@ -257,12 +259,12 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
-                                    prop="rebuilds"
+                                    prop="rebuildList"
                                     label="考试重修学生">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="rebuildValue[ scope.$index ]"
+                                    <el-select v-model.trim="scope.row[scope.column.property]"
                                                multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
+                                               @change="changeQueryDataRebuildList(scope)"
                                                :id="'val' + scope.$index"
                                                :key="timer">
                                         <el-option
@@ -280,12 +282,12 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
-                                    prop="teachers"
+                                    prop="teacherList"
                                     label="监考老师">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="teacherValue[ scope.$index ]"
+                                    <el-select v-model.trim="scope.row[scope.column.property]"
                                                multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
+                                               @change="changeQueryDataTeacherList(scope)"
                                                :id="'val' + scope.$index"
                                                :key="timer">
                                         <el-option
@@ -307,26 +309,20 @@
                                 <div style="float: left;margin-left: 0;">
                                     当前可用考场个数：<span>{{queryData.length}}</span>
                                 </div>
-
                             </div>
 
                             <div>
                                 <div style="width: 280px;">
                                     <span>考试负责人：</span>
                                     <div>
-                                        <el-input
-                                                style="width: 140px;"
-                                                v-model="majorTeacher.name + ' ' + majorTeacher.teacherId"
-                                                :disabled="true"
-                                        >
-                                        </el-input>
+                                        <el-tag size="medium">{{ majorTeacher.name }}  {{majorTeacher.teacherId}}</el-tag>
                                     </div>
                                 </div>
                                 <div>
                                     <el-button type="warning" @click="modifyInfo" :disabled="submitSum">修改头部信息</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
-                                    <el-button type="success" :disabled="submitSum">*智能排考</el-button>
+                                    <el-button type="success" :disabled="submitSum" @click="intelligenceArrangeExam" >*智能排考</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
                                     <el-button type="primary" :disabled="submitSum">提交考试</el-button>
@@ -375,7 +371,6 @@
                                     prop="personNum"
                                     sortable
                                     label="已选参考人数"
-                                    width="160"
                             >
                                 <template slot-scope="scope">
                                     <el-tag size="medium" :type="scope.row.personNum <= scope.row.num2 ? '' : 'danger'">{{ scope.row.personNum }}</el-tag>
@@ -383,13 +378,15 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
+                                    prop="classSumList"
                                     label="考试班级">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="classSumValue[ scope.$index ]"
-                                               multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
-                                               :id="'val' + scope.$index"
-                                               :key="timer">
+                                    <el-select
+                                            v-model.trim="scope.row[scope.column.property]"
+                                            multiple placeholder="请选择"
+                                            @change="changeQueryDataClassSumList(scope)"
+                                            :id="'val' + scope.$index"
+                                            :key="timer">
                                         <el-option
                                                 v-for="classSum in classSumList"
                                                 :key="classSum.id"
@@ -405,12 +402,12 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
-                                    prop="teachers"
+                                    prop="teacherList"
                                     label="监考老师">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="teacherValue[ scope.$index ]"
+                                    <el-select v-model.trim="scope.row[scope.column.property]"
                                                multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
+                                               @change="changeQueryDataTeacherList(scope)"
                                                :id="'val' + scope.$index"
                                                :key="timer">
                                         <el-option
@@ -439,19 +436,14 @@
                                 <div style="width: 280px;">
                                     <span>考试负责人：</span>
                                     <div>
-                                        <el-input
-                                                style="width: 140px;"
-                                                v-model="majorTeacher.name + ' ' + majorTeacher.teacherId"
-                                                :disabled="true"
-                                        >
-                                        </el-input>
+                                        <el-tag size="medium">{{ majorTeacher.name }}  {{majorTeacher.teacherId}}</el-tag>
                                     </div>
                                 </div>
                                 <div>
                                     <el-button type="warning" @click="modifyInfo" :disabled="submitSum">修改头部信息</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
-                                    <el-button type="success" :disabled="submitSum">*智能排考</el-button>
+                                    <el-button type="success" :disabled="submitSum" @click="intelligenceArrangeExam" >*智能排考</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
                                     <el-button type="primary" :disabled="submitSum">提交考试</el-button>
@@ -481,13 +473,15 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
+                                    prop="classSumList"
                                     label="考试班级">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="classSumValue[ scope.$index ]"
-                                               multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
-                                               :id="'val' + scope.$index"
-                                               :key="timer">
+                                    <el-select
+                                            v-model.trim="scope.row[scope.column.property]"
+                                            multiple placeholder="请选择"
+                                            @change="changeQueryDataClassSumList(scope)"
+                                            :id="'val' + scope.$index"
+                                            :key="timer">
                                         <el-option
                                                 v-for="classSum in classSumList"
                                                 :key="classSum.id"
@@ -503,12 +497,12 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
-                                    prop="rebuilds"
+                                    prop="rebuildList"
                                     label="考试重修学生">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="rebuildValue[ scope.$index ]"
+                                    <el-select v-model.trim="scope.row[scope.column.property]"
                                                multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
+                                               @change="changeQueryDataRebuildList(scope)"
                                                :id="'val' + scope.$index"
                                                :key="timer">
                                         <el-option
@@ -518,20 +512,20 @@
                                                 :value="rebuild.username"
                                                 :disabled="rebuild.disabled"
                                         >
-                                            <span style="float: left">{{ rebuild.grade }}级{{ rebuild.name }}</span>
-                                            <span style="float: right; margin-left: 4px;color: #8492a6; font-size: 13px">{{ rebuild.username }}</span>
+                                            <span style="float: left">{{ rebuild.grade }}级{{ rebuild.name }} </span>
+                                            <span style="float: right; margin-left: 4px;color: #8492a6; font-size: 13px"> {{ rebuild.username }}</span>
                                         </el-option>
                                     </el-select>
                                 </template>
                             </el-table-column>
                             <el-table-column
                                     align="center"
-                                    prop="teachers"
+                                    prop="teacherList"
                                     label="监考老师">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="teacherValue[ scope.$index ]"
+                                    <el-select v-model.trim="scope.row[scope.column.property]"
                                                multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
+                                               @change="changeQueryDataTeacherList(scope)"
                                                :id="'val' + scope.$index"
                                                :key="timer">
                                         <el-option
@@ -551,28 +545,25 @@
                         <div class="table-footer">
                             <div>
                                 <div style="float: left;margin-left: 0;">
-<!--                                    当前可用考场个数：<span>{{queryData.length}}</span>-->
+                                    <el-button type="primary" icon="el-icon-edit" @click="addRoom" :disabled="submitSum">添加考场</el-button>
                                 </div>
-
+                                <div style="float: left;margin-left: 12px;">
+                                    <el-button type="danger" icon="el-icon-delete" @click="removeRoom" :disabled="submitSum">删除考场</el-button>
+                                </div>
                             </div>
 
                             <div>
                                 <div style="width: 280px;">
                                     <span>考试负责人：</span>
                                     <div>
-                                        <el-input
-                                                style="width: 140px;"
-                                                v-model="majorTeacher.name + ' ' + majorTeacher.teacherId"
-                                                :disabled="true"
-                                        >
-                                        </el-input>
+                                        <el-tag size="medium">{{ majorTeacher.name }}  {{majorTeacher.teacherId}}</el-tag>
                                     </div>
                                 </div>
                                 <div>
                                     <el-button type="warning" @click="modifyInfo" :disabled="submitSum">修改头部信息</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
-                                    <el-button type="success" :disabled="submitSum">*智能排考</el-button>
+                                    <el-button type="success" :disabled="submitSum" @click="intelligenceArrangeExam" >*智能排考</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
                                     <el-button type="primary" :disabled="submitSum">提交考试</el-button>
@@ -602,13 +593,15 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
+                                    prop="classSumList"
                                     label="考试班级">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="classSumValue[ scope.$index ]"
-                                               multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
-                                               :id="'val' + scope.$index"
-                                               :key="timer">
+                                    <el-select
+                                            v-model.trim="scope.row[scope.column.property]"
+                                            multiple placeholder="请选择"
+                                            @change="changeQueryDataClassSumList(scope)"
+                                            :id="'val' + scope.$index"
+                                            :key="timer">
                                         <el-option
                                                 v-for="classSum in classSumList"
                                                 :key="classSum.id"
@@ -624,12 +617,12 @@
                             </el-table-column>
                             <el-table-column
                                     align="center"
-                                    prop="teachers"
+                                    prop="teacherList"
                                     label="监考老师">
                                 <template slot-scope="scope">
-                                    <el-select v-model.trim="teacherValue[ scope.$index ]"
+                                    <el-select v-model.trim="scope.row[scope.column.property]"
                                                multiple placeholder="请选择"
-                                               @change="$forceUpdate()"
+                                               @change="changeQueryDataTeacherList(scope)"
                                                :id="'val' + scope.$index"
                                                :key="timer">
                                         <el-option
@@ -649,28 +642,25 @@
                         <div class="table-footer">
                             <div>
                                 <div style="float: left;margin-left: 0;">
-                                    <!--                                    当前可用考场个数：<span>{{queryData.length}}</span>-->
+                                    <el-button type="primary" icon="el-icon-edit" @click="addRoom" :disabled="submitSum">添加考场</el-button>
                                 </div>
-
+                                <div style="float: left;margin-left: 12px;">
+                                    <el-button type="danger" icon="el-icon-delete" @click="removeRoom" :disabled="submitSum">删除考场</el-button>
+                                </div>
                             </div>
 
                             <div>
                                 <div style="width: 280px;">
                                     <span>考试负责人：</span>
                                     <div>
-                                        <el-input
-                                                style="width: 140px;"
-                                                v-model="majorTeacher.name + ' ' + majorTeacher.teacherId"
-                                                :disabled="true"
-                                        >
-                                        </el-input>
+                                        <el-tag size="medium">{{ majorTeacher.name }}  {{majorTeacher.teacherId}}</el-tag>
                                     </div>
                                 </div>
                                 <div>
                                     <el-button type="warning" @click="modifyInfo" :disabled="submitSum">修改头部信息</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
-                                    <el-button type="success" :disabled="submitSum">*智能排考</el-button>
+                                    <el-button type="success" :disabled="submitSum" @click="intelligenceArrangeExam" >*智能排考</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
                                     <el-button type="primary" :disabled="submitSum">提交考试</el-button>
@@ -714,6 +704,7 @@
                 collegeList:[],
                 gradeList:[],
                 professionList:[],
+                professionListCopy:[],
                 courseList:[],
                 exam:{
                     term: {}, college:{}, profession:{}, grade:{}, course:{}, week:0, time:0,
@@ -721,17 +712,15 @@
                     endTime:'',//timeList[1]
                     rebuild:true, online:false
                 },
+                examData:{},
                 queryInfo:{},
                 queryData:[
-                    /*{loc: "主教学楼", room: "101", num1: 137, num2:82, personNum: 0, banjis: [], rebuilds: [], teachers: []},*/
+                    /*{loc: "主教学楼", room: "101", num1: 137, num2:82, personNum: 0, classSumList: [], rebuildList: [], teacherList: []},*/
                 ],
                 roomList:[],
                 classSumList:[],
                 rebuildList:[],
                 teacherList:[],
-                classSumValue:[],
-                rebuildValue:[],
-                teacherValue:[],
                 majorTeacher:{
                     teacherId:'',
                     name:''
@@ -819,7 +808,18 @@
                     .then((res) => {
                         console.log(res.data);
                         if(res.data.flag === true){
-                            this.professionList = res.data.data;
+                            this.professionListCopy = res.data.data;
+                            for (let i = 0; i < this.professionListCopy.length; i++) {
+                                let flag = true;
+                                for (let j = 0; j < this.professionList.length; j++) {
+                                    if(this.professionList[j].profession === this.professionListCopy[i].profession){
+                                        flag = false;break;
+                                    }
+                                }
+                                if(flag){
+                                    this.professionList.push(this.professionListCopy[i]);
+                                }
+                            }
                         }
                     }).finally(() => {
                 });
@@ -828,15 +828,15 @@
             setGradeList(){
                 this.gradeList = [];
                 console.log(this.exam.profession.profession)
-                for (const i in this.professionList) {
-                    if(this.professionList[i].profession === this.exam.profession.profession){
-                        this.gradeList.push(this.professionList[i]);
+                for (const i in this.professionListCopy) {
+                    if(this.professionListCopy[i].profession === this.exam.profession.profession){
+                        this.gradeList.push(this.professionListCopy[i]);
                     }
                 }
             },
             /*根据年级（exam.grade）获取此年级专业所有的课程信息列表 =》courseList */
             setCourseList(){
-                let obj = {college: this.exam.college, term: this.exam.term, profession: this.exam.profession};
+                let obj = {college: this.exam.college, term: this.exam.term, profession: this.exam.grade};
                 console.log("this.exam.profession", this.exam.profession);
                 this.axios.post("/exam/courseList/", obj)
                     .then((res) => {
@@ -881,34 +881,66 @@
             },
             /*此函数将重新编辑考试信息，将清空已查询到的排考信息*/
             modifyInfo(){
-                this.submitFlag = false;
-                this.queryData = [];
-                this.roomList = [];
-                this.classSumList = [];
-                this.rebuildList = [];
-                this.teacherList = [];
-                this.classSumValue = [];
-                this.rebuildValue = [];
-                this.teacherValue = [];
-                this.majorTeacher = {
-                    teacherId:'', name:''
-                };
+                this.$confirm('此操作将重新编辑考试信息, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.submitFlag = false;
+                    this.queryData = [];
+                    this.roomList = [];
+                    this.classSumList = [];
+                    this.rebuildList = [];
+                    this.teacherList = [];
+                    this.classSumList = [];
+                    this.rebuildList = [];
+                    this.teacherList = [];
+                    this.majorTeacher = {
+                        teacherId:'', name:''
+                    };
+                    this.submitSum = true;
+                    this.$message({
+                        type: 'success',
+                        message: '操作完成'
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                });
             },
             /*此函数将清空头部信息*/
             clearInfo(){
-                this.termList = [];
-                this.timeList = [];
-                this.collegeList = [];
-                this.gradeList = [];
-                this.professionList = [];
-                this.courseList = [];
-                this.exam = {
-                    term: {}, college:{}, profession:{}, grade:{}, course:{}, week:0, time:0,
-                    startTime:'',//timeList[0]
-                    endTime:'',//timeList[1]
-                    rebuild:false, online:false
-                }
-                this.queryInfo = {};
+                this.$confirm('此操作将清空考试信息, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.termList = [];
+                    this.timeList = [];
+                    this.collegeList = [];
+                    this.gradeList = [];
+                    this.professionList = [];
+                    this.courseList = [];
+                    this.exam = {
+                        term: {}, college:{}, profession:{}, grade:{}, course:{}, week:0, time:0,
+                        startTime:'',//timeList[0]
+                        endTime:'',//timeList[1]
+                        rebuild:false, online:false
+                    }
+                    this.queryInfo = {};
+                    this.setTermList();
+                    this.$message({
+                        type: 'success',
+                        message: '操作完成'
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                });
             },
             /*根据this.exam查询对应信息 =》 queryData:[],roomList:[], classSumList:[], rebuildList:[], teacherList:[], majorTeacher:{},*/
             selectClassList(){
@@ -973,6 +1005,7 @@
                         console.log(res.data);
                         if(res.data.flag && res.data.data != ""){//获取到数据
                             this.submitFlag = true;
+                            this.examData = res.data.data;
                             setTimeout(() => {
                                 this.$message.success(res.data.msg);
                             }, 10);
@@ -982,6 +1015,14 @@
                             this.rebuildList = this.isNull(res.data.data.rebuildList);
                             this.teacherList = this.isNull(res.data.data.teacherList);
                             this.majorTeacher = this.isNull(res.data.data.majorTeacher);
+                            if(this.majorTeacher === ""){
+                                this.$notify({
+                                    title: '提示',
+                                    message: '本课程未设置考试负责人！请考虑后台添加该考试负责人数据',
+                                    type: 'warning'
+                                });
+                            }
+                            let i = 0;
                             if(!this.queryInfo.online){//线下
                                 for (const room of this.roomList) {
                                     let obj = {
@@ -989,9 +1030,17 @@
                                     }
                                     this.queryData.push(obj);
                                 }
+                                setTimeout(() => {
+                                    this.$message.success("当前时段可用考场数量为： " + this.roomList.length + " 个");
+                                }, 10);
                             }
                             else{//线上
-                                this.queryData.push({});
+                                this.queryData.push({personNum: 0});
+                            }
+                            if(this.queryInfo.rebuild){
+                                setTimeout(() => {
+                                    this.$message.success("当前重修考生人数为： " + this.rebuildList.length + " 人");
+                                }, 10);
                             }
                             setTimeout(() => {
                                 this.$message.success("当前时段空闲监考教师人数为： " + this.teacherList.length + " 人");
@@ -1057,86 +1106,114 @@
                     });
                 }
             },
+            /*s刷新数据s*/
+            changeQueryDataClassSumList(scope){
+                this.$forceUpdate();
+                //console.log(scope.$index, scope.row);
+                //1.全部禁用
+                for (let k = 0; k < this.classSumList.length; k++) {
+                    this.$set(this.classSumList[k],'disabled', false);
+                }
+                //2.显示该行人数
+                for(let i = 0; i < this.queryData.length; i++){
+                    //2.1.统计所选人数
+                    this.queryData[i].personNum = 0;
+                    for (let j = 0; j < this.queryData[i].classSumList.length; j++) {
+                        for (let k = 0; k < this.classSumList.length; k++) {
+                            if(this.queryData[i].classSumList[j] === this.classSumList[k].banji){
+                                this.queryData[i].personNum += this.classSumList[k].sum;
+                                //2.2 再逐一封禁
+                                this.$set(this.classSumList[k],'disabled', true);
+                            }
+                        }
+                    }
+                    this.queryData[i].personNum += this.queryData[i].rebuildList.length;
+                }
+                this.$forceUpdate();
+            },
+            changeQueryDataRebuildList(scope){
 
+                //console.log(scope.$index, scope.row);
+                //1.全部禁用
+                for (let k = 0; k < this.rebuildList.length; k++) {
+                    this.$set(this.rebuildList[k],'disabled', false);
+                }
+                //2.显示该行人数
+                for(let i = 0; i < this.queryData.length; i++){
+                    //2.1.统计所选人数
+                    this.queryData[i].personNum = 0;
+                    for (let j = 0; j < this.queryData[i].classSumList.length; j++) {
+                        for (let k = 0; k < this.classSumList.length; k++) {
+                            if(this.queryData[i].classSumList[j] === this.classSumList[k].banji){
+                                this.queryData[i].personNum += this.classSumList[k].sum;
+                                break;
+                            }
+                        }
+                    }
+                    //2.2 再逐一封禁
+                    for (let j = 0; j < this.queryData[i].rebuildList.length; j++) {
+                        for (let k = 0; k < this.rebuildList.length; k++) {
+                            if(this.queryData[i].rebuildList[j] === this.rebuildList[k].username){
+                                this.$set(this.rebuildList[k],'disabled', true);
+                                break;
+                            }
+                        }
+                    }
+                    this.queryData[i].personNum += this.queryData[i].rebuildList.length;
+                }
+                this.$forceUpdate();
+            },
+            changeQueryDataTeacherList(scope){
+                this.$forceUpdate();
+                for (let k = 0; k < this.teacherList.length; k++) {
+                    this.$set(this.teacherList[k],'disabled', false);
+                }
+                for(let i = 0; i < this.queryData.length; i++){
+                    for (let j = 0; j < this.queryData[i].teacherList.length; j++) {
+                        for (let k = 0; k < this.teacherList.length; k++) {
+                            if(this.queryData[i].teacherList[j] === this.teacherList[k].username){
+                                //2.2 再逐一封禁
+                                this.$set(this.teacherList[k],'disabled', true);
+                            }
+                        }
+                    }
+                }
+                this.$forceUpdate();
+            },
+            /*增删线上考场*/
+            addRoom(){
+                this.queryData.push({personNum: 0});
+            },
+            removeRoom(){
+                this.queryData.pop();
+            },
+            /*智能安排考试*/
+            intelligenceArrangeExam(){
+                this.$confirm('智能排考操作将自行安排考场, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.axios.post("/exam/intelligenceArrangeExam", this.examData)
+                        .then((res) => {
+                            console.log(this.examData)
+                        })
+
+                    this.$message({
+                        type: 'success',
+                        message: '操作完成'
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                });
+            }
         },
         watch: {//当前组件的侦听器
-            rebuildValue:{
-                handler(newVal, oldVal){
-                    //console.log("rebuildValue newVal:",newVal, "oldVal:",oldVal);
-                    //2.禁用选中项
-                    //2.1 先全部解封
-                    for (let k = 0; k < this.rebuildList.length; k++) {
-                        this.rebuildList[k].disabled = false;
-                    }
-                    for(let i = 0; i < newVal.length; i++){
-                        //1.统计所选人数
-                        this.queryData[i].personNum = 0;
-                        for (let j = 0; j < this.classSumValue[i].length; j++) {
-                            for (let k = 0; k < this.classSumList.length; k++) {
-                                if(this.classSumValue[i][j] === this.classSumList[k].banji){
-                                    this.queryData[i].personNum += this.classSumList[k].sum;
-                                    break;
-                                }
-                            }
-                        }
-                        //2.2 再逐一封禁
-                        for (let j = 0; j < this.rebuildValue[i].length; j++) {
-                            for (let k = 0; k < this.rebuildList.length; k++) {
-                                if(this.rebuildValue[i][j] === this.rebuildList[k].username){
-                                    this.rebuildList[k].disabled = true;
-                                }
-                            }
-                        }
-                        this.queryData[i].personNum += this.rebuildValue[i].length;
-                    }
-                },
-                deep:false
-            },
-            classSumValue:{
-                handler(newVal, oldVal){
-                    //console.log("classSumValue newVal:",newVal, "oldVal:",oldVal);
-                    //2.禁用选中项
-                    //2.1 先全部解封
-                    for (let k = 0; k < this.classSumList.length; k++) {
-                        this.classSumList[k].disabled = false;
-                    }
-                    for(let i = 0; i < newVal.length; i++){
-                        //1.统计所选人数
-                        this.queryData[i].personNum = 0;
-                        for (let j = 0; j < this.classSumValue[i].length; j++) {
-                            for (let k = 0; k < this.classSumList.length; k++) {
-                                if(this.classSumValue[i][j] === this.classSumList[k].banji){
-                                    this.queryData[i].personNum += this.classSumList[k].sum;
-                                    //2.2 再逐一封禁
-                                    this.classSumList[k].disabled = true;
-                                }
-                            }
-                        }
-                        this.queryData[i].personNum += this.rebuildValue[i].length;
-                    }
-                },
-                deep:false
-            },
-            teacherValue:{
-                handler(newVal, oldVal){
-                    //console.log("teacherValue newVal:",newVal, "oldVal:",oldVal);
-                    //2.禁用选中项
-                    //2.1 先全部解封
-                    for (let k = 0; k < this.teacherList.length; k++) {
-                        this.teacherList[k].disabled = false;
-                    }
-                    for(let i = 0; i < newVal.length; i++){
-                        for (let j = 0; j < this.teacherValue[i].length; j++) {
-                            for (let k = 0; k < this.teacherList.length; k++) {
-                                if(this.teacherValue[i][j] === this.teacherList[k].username){
-                                    //2.2 再逐一封禁
-                                    this.teacherList[k].disabled = true;
-                                }
-                            }
-                        }
-                    }
-                },
-                deep:false
+            'queryData.classSumList'(newVal, oldVal){
+                  console.log(newVal)
             },
             'exam.term'(newVal, oldVal) {
                 console.log("exam.term newVal:",newVal, "oldVal:",oldVal);
