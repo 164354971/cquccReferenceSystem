@@ -3,7 +3,7 @@ package com.cqucc.pojo.exam.admin;
 import lombok.Data;
 
 @Data
-public class Room {
+public class Room{
     private String loc     ;//varchar(10)  not null comment '所在楼宇',
     private Integer room    ;//int         not null comment '教室号',
     private Integer num1    ;//int         not null comment '座位数',
@@ -30,4 +30,5 @@ public class Room {
         this.width2 = width2;
         this.width3 = width3;
     }
+
 }

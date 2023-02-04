@@ -325,7 +325,7 @@
                                     <el-button type="success" :disabled="submitSum" @click="intelligenceArrangeExam" >*智能排考</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
-                                    <el-button type="primary" :disabled="submitSum">提交考试</el-button>
+                                    <el-button type="primary" :disabled="submitSum" @click="submitExam">提交考试</el-button>
                                 </div>
                             </div>
                         </div>
@@ -446,7 +446,7 @@
                                     <el-button type="success" :disabled="submitSum" @click="intelligenceArrangeExam" >*智能排考</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
-                                    <el-button type="primary" :disabled="submitSum">提交考试</el-button>
+                                    <el-button type="primary" :disabled="submitSum" @click="submitExam">提交考试</el-button>
                                 </div>
                             </div>
                         </div>
@@ -566,7 +566,7 @@
                                     <el-button type="success" :disabled="submitSum" @click="intelligenceArrangeExam" >*智能排考</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
-                                    <el-button type="primary" :disabled="submitSum">提交考试</el-button>
+                                    <el-button type="primary" :disabled="submitSum" @click="submitExam">提交考试</el-button>
                                 </div>
                             </div>
                         </div>
@@ -663,7 +663,7 @@
                                     <el-button type="success" :disabled="submitSum" @click="intelligenceArrangeExam" >*智能排考</el-button>
                                 </div>
                                 <div style="margin-left: 12px;">
-                                    <el-button type="primary" :disabled="submitSum">提交考试</el-button>
+                                    <el-button type="primary" :disabled="submitSum" @click="submitExam">提交考试</el-button>
                                 </div>
                             </div>
                         </div>
@@ -1006,6 +1006,7 @@
                         if(res.data.flag && res.data.data != ""){//获取到数据
                             this.submitFlag = true;
                             this.examData = res.data.data;
+
                             setTimeout(() => {
                                 this.$message.success(res.data.msg);
                             }, 10);
@@ -1033,14 +1034,21 @@
                                 setTimeout(() => {
                                     this.$message.success("当前时段可用考场数量为： " + this.roomList.length + " 个");
                                 }, 10);
+                                this.examData.roomSum = this.roomList.length;
                             }
                             else{//线上
-                                this.queryData.push({personNum: 0});
+                                this.queryData.push({personNum: 0, classSumList: [], rebuildList: [], teacherList:[]});
+                                this.examData.roomList = [];
+                                this.examData.roomSum = 1;
                             }
+
                             if(this.queryInfo.rebuild){
                                 setTimeout(() => {
                                     this.$message.success("当前重修考生人数为： " + this.rebuildList.length + " 人");
                                 }, 10);
+                            }
+                            else{
+                                this.examData.rebuildList = [];
                             }
                             setTimeout(() => {
                                 this.$message.success("当前时段空闲监考教师人数为： " + this.teacherList.length + " 人");
@@ -1115,6 +1123,7 @@
                     this.$set(this.classSumList[k],'disabled', false);
                 }
                 //2.显示该行人数
+                console.log(this.queryData)
                 for(let i = 0; i < this.queryData.length; i++){
                     //2.1.统计所选人数
                     this.queryData[i].personNum = 0;
@@ -1182,21 +1191,106 @@
             },
             /*增删线上考场*/
             addRoom(){
-                this.queryData.push({personNum: 0});
+                this.queryData.push({personNum: 0, classSumList: [], rebuildList: [], teacherList:[]});
+                this.examData.roomSum++;
             },
             removeRoom(){
-                this.queryData.pop();
+                if(this.examData.roomSum > 1){
+                    this.queryData.pop();
+                    this.examData.roomSum--;
+                }
+                else{
+                    setTimeout(() => {
+                        this.$message.warning("线上考试，怎么也得留一个考场吧~~");
+                    }, 10);
+                }
             },
             /*智能安排考试*/
             intelligenceArrangeExam(){
                 this.$confirm('智能排考操作将自行安排考场, 是否继续?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
-                    type: 'warning'
+                    type: 'success'
                 }).then(() => {
+                    this.loading = true;
                     this.axios.post("/exam/intelligenceArrangeExam", this.examData)
                         .then((res) => {
-                            console.log(this.examData)
+                            console.log(res.data);
+                            if(res.data.flag && res.data.data != ""){//获取到数据
+                                let data = res.data.data.data;
+                                console.log(data)
+                                if(this.queryInfo.online === false){//线下
+                                    let len = data.locs.length;
+                                    for (let j = 0; j < len; j++) {
+                                        for (let i = 0; i < this.queryData.length; i++) {
+                                            if(this.queryData[i].loc === data.locs[j] && this.queryData[i].room === data.rooms[j]){
+                                                this.queryData[i].personNum = data.personNums[j];
+                                                this.queryData[i].classSumList = data.classSums[j];
+                                                this.queryData[i].teacherList = data.teachers[j];
+                                                if(this.queryInfo.rebuild){//有重修生
+                                                    this.queryData[i].rebuildList = data.rebuilds[j];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }else{//线上
+                                    let len = this.examData.roomSum;
+                                    for (let i = 0; i < len; i++) {
+                                        this.queryData[i].personNum = data.personNums[i];
+                                        this.queryData[i].classSumList = data.classSums[i];
+                                        this.queryData[i].teacherList = data.teachers[i];
+                                        if(this.queryInfo.rebuild){//有重修生
+                                            this.queryData[i].rebuildList = data.rebuilds[i];
+                                        }
+                                    }
+
+                                }
+                                this.changeQueryDataClassSumList();
+                                this.changeQueryDataRebuildList();
+                                this.changeQueryDataTeacherList();
+                                setTimeout(() => {
+                                    this.$message.success(res.data.msg);
+                                }, 10);
+
+                            }
+                            else this.$message.error(res.data.msg);
+                            this.loading = false;
+                        })
+
+                    this.$message({
+                        type: 'success',
+                        message: '操作完成'
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                });
+            },
+            /*提交考试信息*/
+            submitExam(){
+                console.log(this.queryInfo)
+                console.log(this.queryData)
+                this.$confirm('智能排考操作将自行安排考场, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'success'
+                }).then(() => {
+                    let obj = {queryInfo: this.queryInfo, queryData: this.queryData};
+                    console.log('obj', obj)
+                    this.axios.post("/exam/submitExam", JSON.stringify(obj),{headers: {'Content-Type': 'application/json;charset=utf-8'}})
+                        .then((res) => {
+                            console.log(res.data);
+                            if(res.data.flag && res.data.data != ""){//获取到数据
+                                let data = res.data.data.data;
+                                console.log(data)
+                                setTimeout(() => {
+                                    this.$message.success(res.data.msg);
+                                }, 10);
+                            }
+                            else this.$message.error(res.data.msg);
+
                         })
 
                     this.$message({

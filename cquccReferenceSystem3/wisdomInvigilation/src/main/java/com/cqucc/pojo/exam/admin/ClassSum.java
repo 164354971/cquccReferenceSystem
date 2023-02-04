@@ -3,7 +3,7 @@ package com.cqucc.pojo.exam.admin;
 import lombok.Data;
 
 @Data
-public class ClassSum {
+public class ClassSum implements Comparable<ClassSum>{
     private Integer id         ;//int auto_increment comment '主键'
     private Integer grade      ;//int         not null comment '年级',
     private String college    ;//varchar(20) not null comment '学院名称',
@@ -21,5 +21,10 @@ public class ClassSum {
         this.profession = profession;
         this.banji = banji;
         this.sum = sum;
+    }
+
+    @Override
+    public int compareTo(ClassSum o) {
+        return o.sum.compareTo(this.sum);
     }
 }

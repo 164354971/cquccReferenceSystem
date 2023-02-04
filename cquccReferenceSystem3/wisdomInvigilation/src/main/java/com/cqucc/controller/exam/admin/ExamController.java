@@ -1,8 +1,12 @@
 package com.cqucc.controller.exam.admin;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.cqucc.pojo.data.IntelligenceArrangeExam;
 import com.cqucc.pojo.data.QueryData;
+import com.cqucc.pojo.data.QueryExam;
 import com.cqucc.pojo.exam.*;
 import com.cqucc.pojo.exam.admin.*;
 import com.cqucc.pojo.data.QueryInfo;
@@ -14,10 +18,13 @@ import com.cqucc.service.exam.admin.*;
 import com.cqucc.service.exam.teacher.ExamTeacherService;
 import com.cqucc.service.historyExam.HistoryExamService;
 import com.cqucc.service.user.TeacherService;
+import com.cqucc.utils.ObjectToList;
 import com.cqucc.utils.R;
+import com.google.gson.Gson;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.io.Reader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -170,7 +177,7 @@ public class ExamController {
         List<Exam> examList = examService.list();
         List<AttendClass> attendClasses = attendClassService.list();
         List<Room> roomList = roomService.list();
-
+        //如果是线下考试，就要搜索可用教室
         if(!queryInfo.getOnline()){
             //3.1 查当前时段各个教室有没有在考试的
             for (Exam e : examList){
@@ -248,7 +255,7 @@ public class ExamController {
         //5.重修生（deal为false表示未排考）
         List<Rebuild> rebuildList = new ArrayList<>();
         QueryWrapper<Rebuild> rqw = new QueryWrapper<>();
-        rqw.eq("college", queryInfo.getCollege()).eq("profession", queryInfo.getProfession()).eq("deal", 0);
+        rqw.eq("college", queryInfo.getCollege()).eq("profession", queryInfo.getProfession()).eq("course", queryInfo.getCourse()).eq("deal", 0);
         rqw.lt("grade", queryInfo.getGrade());
         rebuildList = rebuildService.list(rqw);
 
@@ -288,15 +295,166 @@ public class ExamController {
 
     @RequestMapping("/intelligenceArrangeExam")
     public R intelligenceArrangeExam(@RequestBody QueryData queryData){
-        System.out.println(queryData.toString());
-        List<Room> roomList = (List<Room>) queryData.getRoomList();
-        List<Rebuild> rebuildList = (List<Rebuild>) queryData.getRebuildList();
-        List<Teacher> teacherList = (List<Teacher>) queryData.getTeacherList();
+
+        List<Room> roomList = queryData.getRoomList();
+        List<ClassSum> classSumList = queryData.getClassSumList();
+        List<Rebuild> rebuildList = queryData.getRebuildList();
+        List<Teacher> teacherList = queryData.getTeacherList();
         MajorTeacher majorTeacher = queryData.getMajorTeacher();
-        /*System.out.println(roomList.toString());
-        System.out.println(rebuildList.toString());
-        System.out.println(teacherList.toString());
-        System.out.println(majorTeacher.toString());*/
-        return new R(true, "");
+        System.out.println("roomList: " + roomList.toString());
+        System.out.println("classSumList: " + classSumList.toString());
+        System.out.println("rebuildList: " + rebuildList.toString());
+        System.out.println("teacherList: " + teacherList.toString());
+        if(majorTeacher != null)
+            System.out.println("majorTeacher: " + majorTeacher.toString());
+        /*
+        1.如果是线下考试：
+
+        //1.考场尽量排在一起,尽可能在一所教学楼考试
+        //2.考场空间利用率最大化
+        //3.优先对教师监考次数较少的排考
+
+        * */
+        List<String> locs = new ArrayList<>();
+        List<Integer> rooms = new ArrayList<>();
+        List<Integer> personNums = new ArrayList<>();
+        List<List<Integer>> classSums = new ArrayList<>();
+        List<List<String>> rebuilds = new ArrayList<>();
+        List<List<String>> teachers = new ArrayList<>();
+        if(roomList.size() != 0){
+            //Collections.sort(classSums);
+            int i = 0, j = 0, k = 0;
+            for(Room room : roomList){//对每间教室尽可能坐满
+                int num2 = room.getNum2();
+                int sum = 0;
+
+                List<Integer> cs = new ArrayList<>();
+                for(; i < classSumList.size(); i++){
+                    if(sum + classSumList.get(i).getSum() > num2){
+                        break;
+                    }
+                    sum += classSumList.get(i).getSum();
+                    cs.add(classSumList.get(i).getBanji());
+                }
+
+                List<String> rs = new ArrayList<>();
+                for(; j < rebuildList.size(); j++){
+                    if(sum + 1 > num2){
+                        break;
+                    }
+                    sum += 1;
+                    rs.add(rebuildList.get(j).getUsername());
+                }
+
+                //如果这间教室有人，则考场生效
+                if(sum != 0){
+                    locs.add(room.getLoc());
+                    rooms.add(room.getRoom());
+                    personNums.add(sum);
+                    classSums.add(cs);
+                    rebuilds.add(rs);
+
+                    List<String> ts = new ArrayList<>();
+                    if(teacherList.size() > k)
+                        ts.add(teacherList.get(k++).getUsername());
+                    if(teacherList.size() > k)
+                        if(cs.size() >= 2 || sum >= 60){//如果当前考场所选班级大于等于2个 或 考场总人数超过60人
+                            //则该考场增加一个监考教师
+                            ts.add(teacherList.get(k++).getUsername());
+                        }
+                    teachers.add(ts);
+                }
+            }
+            //如果教室用完了还没有排完人数
+            if(i < classSumList.size() || j < rebuildList.size()){
+                return new R(true, new R(true, new IntelligenceArrangeExam(locs, rooms, personNums, classSums, rebuilds, teachers)), "考场建议排考座位不足！请替换新的考试时段，或根据实际情况做出调整");
+            }
+        }else{
+            int i = 0, j = 0, k = 0;
+            int classAve = classSumList.size() / queryData.getRoomSum();
+            int classRes = classSumList.size() % queryData.getRoomSum();
+            for(int l = 0; l < queryData.getRoomSum(); l++){
+                if(classAve >= 1){//每个考场至少能分到一个班的情况
+                    int sum = 0;
+                    List<Integer> cs = new ArrayList<>();
+                    //将剩余班级全部放进第一个线上考场
+                    for(int h = 0; h < classAve + classRes; h++, i++){
+                        sum += classSumList.get(i).getSum();
+                        cs.add(classSumList.get(i).getBanji());
+                    }
+                    classRes = 0;
+                    List<String> rs = new ArrayList<>();
+                    //将重修生全部放进第一个线上考场
+                    for(; j < rebuildList.size(); j++){
+                        sum += 1;
+                        rs.add(rebuildList.get(j).getUsername());
+                    }
+                    if(sum != 0){
+                        personNums.add(sum);
+                        classSums.add(cs);
+                        rebuilds.add(rs);
+
+                        List<String> ts = new ArrayList<>();
+                        if(teacherList.size() > k)
+                            ts.add(teacherList.get(k++).getUsername());
+                        if(teacherList.size() > k)
+                            if(cs.size() >= 2 || sum >= 60){//如果当前考场所选班级大于等于2个 或 考场总人数超过60人
+                                //则该考场增加一个监考教师
+                                ts.add(teacherList.get(k++).getUsername());
+                            }
+                        teachers.add(ts);
+                    }
+                }
+                else{//平均每个考场分不到一个班级
+                    int sum = 0;
+                    List<Integer> cs = new ArrayList<>();
+                    if(classSumList.size() > i){
+                        sum += classSumList.get(i).getSum();
+                        cs.add(classSumList.get(i).getBanji());
+                        i++;
+                    }
+                    List<String> rs = new ArrayList<>();
+                    //将重修生全部放进第一个线上考场
+                    for(; j < rebuildList.size(); j++){
+                        sum += 1;
+                        rs.add(rebuildList.get(j).getUsername());
+                    }
+
+                    personNums.add(sum);
+                    classSums.add(cs);
+                    rebuilds.add(rs);
+                    List<String> ts = new ArrayList<>();
+                    if(sum != 0){
+                        if(teacherList.size() > k)
+                            ts.add(teacherList.get(k++).getUsername());
+                        if(teacherList.size() > k)
+                            if(cs.size() >= 2 || sum >= 60){//如果当前考场所选班级大于等于2个 或 考场总人数超过60人
+                                //则该考场增加一个监考教师
+                                ts.add(teacherList.get(k++).getUsername());
+                            }
+                        teachers.add(ts);
+                    }
+                    else{
+                        teachers.add(ts);
+                    }
+                }
+            }
+        }
+
+        return new R(true, new R(true, new IntelligenceArrangeExam(locs, rooms, personNums, classSums, rebuilds, teachers)), "智能排考完成！请根据实际情况做出调整");
+    }
+
+    @RequestMapping("/submitExam")
+    @PostMapping
+    public R submitExam(@RequestBody Map<String, Object> params){
+        System.out.println(params.toString());
+        System.out.println(params.get("queryData").toString());
+        System.out.println(JSON.toJSONString(params.get("queryData")));
+        QueryInfo queryInfo = JSON.parseObject(JSON.toJSONString(params.get("queryInfo")), QueryInfo.class);
+        System.out.println(queryInfo.toString());
+        List<QueryExam> QueryExamList = new ArrayList<>(JSON.parseArray(JSON.toJSONString(params.get("queryData")),QueryExam.class));
+        System.out.println(QueryExamList.toString());
+
+        return new R();
     }
 }
