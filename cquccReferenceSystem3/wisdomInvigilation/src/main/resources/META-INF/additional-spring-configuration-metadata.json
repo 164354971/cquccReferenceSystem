@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "async.executor.thread.core_pool_size",
+      "type": "java.lang.String",
+      "description": "Description for async.executor.thread.core_pool_size."
+  }
+] }
